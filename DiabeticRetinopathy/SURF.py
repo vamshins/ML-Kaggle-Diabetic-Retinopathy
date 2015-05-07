@@ -1,55 +1,25 @@
 __author__ = 'Vamshi'
 
 import cv2
-import numpy as np
+import matplotlib.pyplot as plt
+import os
 
-# Load the images
-img =cv2.imread('16_left.jpeg')
+for subdir, dirs, files in os.walk('E:/UNM/CS 529 - Intro to Machine Learning/Assignment 4/Data/Resized/sample'):
+    for f in files:
+        path = os.path.join(subdir, f)
+        im = cv2.imread(path)
+        img = cv2.imread(path)
 
-# Convert them to grayscale
-imgg =cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+        # Create SURF object. You can specify params here or later.
+        # Here I set Hessian Threshold to 400
+        surf = cv2.SURF(400)
 
-# SURF extraction
-surf = cv2.SURF()
-kp, descritors = surf.detectAndCompute(imgg,None,useProvidedKeypoints = False)
-# kp = surf.detect(imgg, None)
+        # Find keypoints and descriptors directly
+        kp, des = surf.detectAndCompute(img,None)
 
+        print f + " - " + str(len(kp))
 
-# Setting up samples and responses for kNN
-samples = np.array(descritors)
-responses = np.arange(len(kp),dtype = np.float32)
-
-# kNN training
-knn = cv2.KNearest()
-knn.train(samples,responses)
-
-# Now loading a template image and searching for similar keypoints
-template = cv2.imread('16_left.jpeg')
-templateg= cv2.cvtColor(template,cv2.COLOR_BGR2GRAY)
-keys,desc = surf.detectAndCompute(templateg,None,useProvidedKeypoints = False)
-
-for h,des in enumerate(desc):
-    des = np.array(des,np.float32).reshape((1,128))
-    retval, results, neigh_resp, dists = knn.find_nearest(des,1)
-    res,dist =  int(results[0][0]),dists[0][0]
-
-    if dist<0.1: # draw matched keypoints in red color
-        color = (0,0,255)
-    else:  # draw unmatched in blue color
-        print dist
-        color = (255,0,0)
-
-    #Draw matched key points on original image
-    x,y = kp[res].pt
-    center = (int(x),int(y))
-    cv2.circle(img,center,2,color,-1)
-
-    #Draw matched key points on template image
-    x,y = keys[h].pt
-    center = (int(x),int(y))
-    cv2.circle(template,center,2,color,-1)
-
-cv2.imshow('img',img)
-cv2.imshow('tm',template)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+        #
+        # img2 = cv2.drawKeypoints(img,kp,None,(255,0,0),4)
+        #
+        # plt.imshow(img2),plt.show()
